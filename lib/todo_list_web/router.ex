@@ -17,10 +17,17 @@ defmodule TodoListWeb.Router do
     plug :accepts, ["json"]
   end
 
+  pipeline :authenticated do
+    plug :require_authenticated_user
+  end
+
   scope "/", TodoListWeb do
     pipe_through :browser
 
     get "/", PageController, :home
+
+    pipe_through :authenticated
+    resources "/todo", TodoController
   end
 
   # Other scopes may use custom stacks.
@@ -48,10 +55,10 @@ defmodule TodoListWeb.Router do
   ## Authentication routes
 
   scope "/", TodoListWeb do
-    pipe_through [:browser, :require_authenticated_user]
+    pipe_through [:browser, :authenticated]
 
-    live_session :require_authenticated_user,
-      on_mount: [{TodoListWeb.UserAuth, :require_authenticated}] do
+    live_session :authenticated,
+      on_mount: [{TodoListWeb.UserAuth, :authenticated}] do
       live "/users/settings", UserLive.Settings, :edit
       live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
     end
